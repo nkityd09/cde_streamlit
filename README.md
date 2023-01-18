@@ -6,7 +6,7 @@ A minimal example of a [Streamlit](https://www.streamlit.io/) application runnin
 We display and chart a small dataset with Seaborn.
 
 ## Repository Structure
-
+#TODO:Change Tree
 ```bash
 .
 ├── cml                     # This folder contains scripts that facilitate the project launch on CML.
@@ -20,11 +20,7 @@ We display and chart a small dataset with Seaborn.
 
 ## Launching the project on CML
 
-There are three ways to launch this project on CML:
-
-1. **From Prototype Catalog** - Navigate to the Prototype Catalog on a CML workspace, select the "Streamlit" tile, click "Launch as Project", click "Configure Project"
-2. **As ML Prototype** - In a CML workspace, click "New Project", add a Project Name, select "ML Prototype" as the Initial Setup option, copy in the repo URL, click "Create Project", click "Configure Project"
-3. **Manual Setup** - In a CML workspace, click "New Project", add a Project Name, select "Git" as the Initial Setup option, copy in the repo URL, click "Create Project". Launch a Python 3 Workbench Session and run `!pip3 install -r requirements.txt` to install requirements. Then create a CML Application as described in the [CML documentation](https://docs.cloudera.com/machine-learning/1.1/applications/topics/ml-applications.html), using `cml/launch_app.py` as the script.
+**Manual Setup** - In a CML workspace, click "New Project", add a Project Name, select "Git" as the Initial Setup option, copy in the repo URL, click "Create Project". Launch a Python 3 Workbench Session and run `!pip3 install -r requirements.txt` to install requirements. Then create a CML Application as described in the [CML documentation](https://docs.cloudera.com/machine-learning/1.1/applications/topics/ml-applications.html), using `cml/launch_app.py` as the script.
 
 ## Using the app
 

@@ -49,6 +49,8 @@ import matplotlib.cm as cmx
 from matplotlib.pyplot import figure
 import plotly.express as px
 import datetime
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
 st.set_page_config(layout="wide")
@@ -67,7 +69,9 @@ final_df4 = pd.read_csv("dataset/four_core_8.csv")
 final_df14 = pd.read_csv("dataset/six_core_14.csv")
 final_df24 = pd.read_csv("dataset/six_core_24.csv")
 final_df241 = pd.read_csv("dataset/six_core_24_exec_1.csv")
-grafana_df = pd.read_csv("dataset/grafana_data_export.csv")
+grafana_df = pd.read_csv("dataset/grafana_data_export_master.csv")
+grafana_df2 = pd.read_csv("dataset/grafana_data_export2.csv")
+jan19_report = pd.read_csv("dataset/six_core_24_exec_1_Jan19.csv")
 ##########
 #Datasets
 ##########
@@ -83,24 +87,32 @@ def calculate_error(error_df):
     error_data_mean = error_df.groupby(["status", "Error_Type"]).mean()
     error_data_org = error_df.groupby(["orgId", "Error_Type"]).count()
     y = error_df["id"].value_counts()
-    fig = px.histogram(error_df, x="status", y=y, barmode="group",category_orders=dict(Cores=[2, 4, 5, 6]), color='Error_Type', text_auto=True)
+    fig = px.histogram(error_df, x="status", y=y, barmode="group",category_orders=dict(Cores=[2, 4, 5, 6]), color='Error_Type', text_auto=True, labels={
+                     "status": "Job Status",
+                     "y": "Job Count",
+                     "Error_Type": "Error Type"
+                 })
     fig.update_xaxes(type ="category" )
     fig.update_layout(height=500)
     fig.update_layout(width=800)
-    fig_org = px.histogram(error_df, x="Error_Type", y=y, barmode="group",category_orders=dict(Cores=[2, 4, 5, 6]), color='orgId', text_auto=True)
+    fig_org = px.histogram(error_df, x="Error_Type", y=y, barmode="group",category_orders=dict(Cores=[2, 4, 5, 6]), color='orgId', text_auto=True, labels={"sum of y":"Job Count"})
     fig_org.update_xaxes(type ="category" )
     fig_org.update_layout(height=700)
     fig_org.update_layout(width=1100)
     with col1:
-      st.write(""" ### Error Count by Type""")
+      st.write(""" ### Job Count by Error Type""")
       st.plotly_chart(fig)
       st.dataframe(error_data_count["id"])
     error_line = error_df
-    fig = px.line(error_line, x = 'id', y = 'runtime', color = 'Error_Type')
+    fig = px.line(error_line, x = 'id', y = 'runtime', color = 'Error_Type',labels={
+                     "id": "Job ID",
+                     "runtime": "Job Runtime",
+                     "Error_Type": "Error Type"
+                 })
     fig.update_layout(height=500)
     fig.update_layout(width=800)
     with col2:
-      st.write(""" ### Average Error Runtime by Type""")
+      st.write(""" ### Average Runtime by Error Type""")
       st.plotly_chart(fig)
       st.dataframe(error_data_mean["runtime"])
     col1, col2 = st.columns([2,1])
@@ -109,7 +121,7 @@ def calculate_error(error_df):
       fig = px.line(error_line, x = 'id', y = 'waitTime', color = 'Error_Type')
       fig.update_layout(height=500)
       fig.update_layout(width=800)
-      st.write(""" ### Average Wait Time by Type""")
+      st.write(""" ### Average Wait Time by Error Type""")
       st.plotly_chart(fig)
       st.dataframe(error_data_mean["waitTime"])
     with col2:
@@ -209,7 +221,7 @@ if st.button('Query'):
 #########
 
 st.write(""" ## Job Analysis """)
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs(["All Jobs", "5 Cores 8 GB", "2 Cores 8 GB", "4 Cores 8GB", "6 cores 14 GB", "6 cores 24 GB", "Compare(Beta)","6 core 24 GB Exec 1", "Nodes"])
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs(["All Jobs", "5 Cores 8 GB", "2 Cores 8 GB", "4 Cores 8GB", "6 cores 14 GB", "6 cores 24 GB", "Compare(Beta)","6 core 24 GB Exec 1", "Nodes", "Weely Report"])
 
 with tab1:
     #########
@@ -549,7 +561,7 @@ with tab9:
   # fig.update_layout(width=800)
   # st.plotly_chart(fig)
   
-  st.write("## 6 Core 24 GB memory :red[ 25 Initial Executors]")
+  st.write("## Before")
   col1, col2 = st.columns(2)
   before_grafana = grafana_df
   before_data = data
@@ -566,6 +578,11 @@ with tab9:
   before_grafana = before_grafana[(before_grafana["Time"] > final_start_val) & (before_grafana["Time"] <= final_stop_val)] 
   with col1:
     fig = px.area(before_grafana, x = 'Time', y = 'Value', color = 'Series', color_discrete_sequence=px.colors.qualitative.G10)
+#    before_grafana = before_grafana[before_grafana.Series == "Compute Nodes (on-demand)"]
+#    avg_node = round(before_grafana.Value.mean())
+#    fig.add_hline(y = avg_node, line_dash="dot",
+#              annotation_text="Average Node Count", 
+#              annotation_position="bottom right")
     fig.update_layout(height=500)
     fig.update_layout(width=800)
     st.plotly_chart(fig)
@@ -575,15 +592,15 @@ with tab9:
     before_data = before_data[(before_data["started"] > final_start_val) & (before_data["started"] <= final_stop_val)]
     with st.expander("Show Data"):
       st.dataframe(before_data)
-    st.write(f"**Average Node Count: :red[{round(before_grafana.Value.mean())}]**")
+    st.write(f"**Average Node Count: {round(before_grafana.Value.mean())}**")
     st.write(f"**Successful Jobs: {len(before_data[before_data.status == 'succeeded'])} jobs**")
     st.write(f"**Failed Jobs: {len(before_data[before_data.status == 'failed'])} jobs**")
     success_data = before_data[before_data.status == 'succeeded']
-    st.write(f"**Average Successful Job Runtime: :red[{round(success_data.runtime.mean())} minutes]**")
+    st.write(f"**Average Successful Job Runtime {round(success_data.runtime.mean())} minutes**")
     fail_data = before_data[before_data.status == 'failed']
-    st.write(f"**Average Failed Job Runtime: :red[{round(fail_data.runtime.mean())} minutes]**")
+    st.write(f"**Average Failed Job Runtime :red[{round(fail_data.runtime.mean())}] minutes**")
     
-  st.write("## 6 Core 24 GB memory :green[ 1 Initial Executors]")
+  st.write("## After")
   col1, col2 = st.columns(2)
   after_grafana = grafana_df
   after_data = data
@@ -596,29 +613,70 @@ with tab9:
     stop_date_val = pd.to_datetime(st.date_input("Stop Date",datetime.date(2023, 1, 8)))
     stop_time_val = st.time_input("After Change Stop Time",datetime.time(6, 00))
     final_stop_val = datetime.datetime.combine(stop_date_val,stop_time_val)
-  after_grafana = after_grafana[(after_grafana["Time"] > final_start_val) & (after_grafana["Time"] <= final_stop_val)]
-  after_grafana['Value'] = after_grafana['Value'].apply(lambda x: 50 if x > 50 else x) # Outlier removal
+  after_grafana = after_grafana[(after_grafana["Time"] > final_start_val) & (after_grafana["Time"] <= final_stop_val)] 
   with col1:
-    fig = px.area(after_grafana, x = 'Time', y = 'Value', color = 'Series', color_discrete_sequence=px.colors.qualitative.G10,title="Cluster Infrastructure Usage")
-    fig.add_vrect(x0="2023-01-06T18:00:00", x1="2023-01-06T18:30:00",
-              annotation_text="Change Implemented",fillcolor="green", opacity=0.25, line_width=2)
+    fig = px.area(after_grafana, x = 'Time', y = 'Value', color = 'Series', color_discrete_sequence=px.colors.qualitative.G10)
+    after_grafana = after_grafana[after_grafana.Series == "Compute Nodes (on-demand)"]
+    avg_node = round(after_grafana.Value.mean())
+    fig.add_hline(y = avg_node, line_dash="dot",
+              annotation_text="Average node Count", 
+              annotation_position="bottom right")
     fig.update_layout(height=500)
     fig.update_layout(width=800)
     st.plotly_chart(fig)
-    
   after_grafana = after_grafana[after_grafana.Series == "Compute Nodes (on-demand)"]
-  st.dataframe(after_grafana)
   with col2:
     after_data['started'] = pd.to_datetime(after_data.started).dt.tz_localize(None)
     after_data = after_data[(after_data["started"] > final_start_val) & (after_data["started"] <= final_stop_val)]
     with st.expander("Show Data"):
       st.dataframe(after_data)
-    st.write(f"**Average Node Count: :green[{round(after_grafana.Value.mean())}]**")
+    st.write(f"**Average Node Count: {round(after_grafana.Value.mean())}**")
     st.write(f"**Successful Jobs: {len(after_data[after_data.status == 'succeeded'])} jobs**")
     st.write(f"**Failed Jobs: {len(after_data[after_data.status == 'failed'])} jobs**")
     success_data = after_data[after_data.status == 'succeeded']
-    st.write(f"**Average Successful Job Runtime: :green[{round(success_data.runtime.mean())} minutes]**")
+    st.write(f"**Average Successful Job Runtime {round(success_data.runtime.mean())} minutes**")
     fail_data = after_data[after_data.status == 'failed']
-    st.write(f"**Average Failed Job Runtime :green[{round(fail_data.runtime.mean())} minutes]**")
+    st.write(f"**Average Failed Job Runtime :red[{round(fail_data.runtime.mean())}] minutes**")
 
+with tab10:
+  st.write("## Weekly Report")
+  col1, col2 = st.columns(2)
+  success_grafana = grafana_df
+  before_data = data
+  success_grafana['Time'] = pd.to_datetime(success_grafana.Time).dt.tz_localize(None)
+  with col1:
+    start_date_val = pd.to_datetime(st.date_input("Week Start Date",datetime.date(2023, 1, 11)))
+    start_time_val = st.time_input("Week Start Time",datetime.time(18, 00))
+    final_start_val = datetime.datetime.combine(start_date_val,start_time_val)
+  with col2:
+    stop_date_val = pd.to_datetime(st.date_input("Week Stop Date",datetime.date(2023, 1, 18)))
+    stop_time_val = st.time_input("Week Stop Time",datetime.time(18, 00))
+    final_stop_val = datetime.datetime.combine(stop_date_val,stop_time_val)
   
+  success_grafana = success_grafana[(success_grafana["Time"] > final_start_val) & (success_grafana["Time"] <= final_stop_val)]
+  before_data['started'] = pd.to_datetime(before_data.started).dt.tz_localize(None)
+  before_data = before_data[(before_data["started"] > final_start_val) & (before_data["started"] <= final_stop_val)]
+  with col1:
+    fig = px.area(success_grafana, x = 'Time', y = 'Value', color = 'Series', color_discrete_sequence=px.colors.qualitative.G10)
+    success_grafana = success_grafana[success_grafana.Series == "Compute Nodes (on-demand)"]
+    avg_node = round(success_grafana.Value.mean())
+    fig.add_hline(y = avg_node, line_dash="dot",
+              annotation_text="Average Node Count", 
+              annotation_position="bottom right")
+    st.write(avg_node)
+    fig.update_layout(height=500)
+    fig.update_layout(width=800)
+    st.plotly_chart(fig)
+  
+  with col2:
+    with st.expander("Show Data"):
+      st.dataframe(before_data)
+    st.write(f"**Average Node Count: :green[{round(success_grafana.Value.mean())}]**")
+    st.write(f"**Successful Jobs: {len(before_data[before_data.status == 'succeeded'])} jobs**")
+    st.write(f"**Failed Jobs: {len(before_data[before_data.status == 'failed'])} jobs**")
+    success_data = before_data[before_data.status == 'succeeded']
+    st.write(f"**Average Successful Job Runtime {round(success_data.runtime.mean())} minutes**")
+    fail_data = before_data[before_data.status == 'failed']
+    st.write(f"**Average Failed Job Runtime :green[{round(fail_data.runtime.mean())}] minutes**")
+    
+  job_function(jan19_report, 6, 24.19)

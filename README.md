@@ -30,6 +30,6 @@ similar to `streamlit.cdsw-or-cml.your-organisation.com`.
 
 If everything worked, you should see an application like this:
 
-![An image of the Streamlit application](docs/images/streamlit-app.png)
+![An image of the Streamlit application](docs/images/streamlit_app.png)
 
 To develop the Streamlit app, open a Python 3 workbench session and modify `app.py`.
